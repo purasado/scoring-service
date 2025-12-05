@@ -35,13 +35,25 @@ pipeline {
 
 
         stage('Push to ECR') {
-            steps {
-                sh """
-                aws ecr get-login-password --region ${AWS_REGION} | docker login --username AWS --password-stdin ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com
-                docker push ${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO_NAME}:${IMAGE_TAG}
-                """
-            }
-        }
+    steps {
+        sh """
+        set -e
+        export AWS_PAGER=""
+
+        # Get AWS account ID
+        ACCOUNT_ID=\$(aws sts get-caller-identity --query Account --output text)
+        echo "Using AWS Account: \$ACCOUNT_ID"
+
+        # ECR login
+        aws ecr get-login-password --region ${AWS_REGION} \
+          | docker login --username AWS --password-stdin \$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com
+
+        # Tag & push image to ECR
+        docker tag scoring-service:latest \$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO_NAME}:${IMAGE_TAG}
+        docker push \$ACCOUNT_ID.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO_NAME}:${IMAGE_TAG}
+        """
+    }
+}
 
         stage('Deploy to K8s') {
             steps {

@@ -13,15 +13,26 @@ pipeline {
         }
 
         stage('Unit Tests') {
-            steps {
-                sh '''
-                python3 -m venv venv
-                . venv/bin/activate
-                pip install -r requirements.txt pytest
-                pytest -q
-                '''
-            }
-        }
+    steps {
+        sh '''
+        set -e
+
+        echo "Current dir:"
+        pwd
+        echo "Files here:"
+        ls
+
+        python3 -m venv venv
+        . venv/bin/activate
+
+        pip install -r requirements.txt pytest
+
+        echo "Running pytest..."
+        pytest -q
+        '''
+    }
+}
+
 
         stage('Build Docker') {
     steps {

@@ -26,14 +26,12 @@ pipeline {
         stage('Build Docker') {
     steps {
         sh """
-        # Disable AWS pager (avoid errors)
         export AWS_PAGER=""
-
-        # Build Docker image locally
-        docker build -t ${REPO_NAME}:${IMAGE_TAG} .
+        docker build -t scoring-service:latest .
         """
     }
 }
+
 
 
         stage('Push to ECR') {

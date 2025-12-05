@@ -72,25 +72,26 @@ pipeline {
         set -e
         export AWS_PAGER=""
 
-        # Configure kubeconfig for EKS
+        # point kubectl to EKS
         aws eks update-kubeconfig --region ${AWS_REGION} --name scoring-eks
 
-        echo "Current kube context:"
-        kubectl config current-context
+        echo "Applying Kubernetes manifests..."
+        kubectl apply -f k8s/serviceaccount.yaml
+        kubectl apply -f k8s/deployment.yaml
+        kubectl apply -f k8s/service.yaml
 
-        echo "Cluster nodes:"
-        kubectl get nodes
+        echo "Deployments after apply:"
+        kubectl get deployments -n default
 
-        # Update deployment image
         kubectl set image deployment/scoring-deployment \
-          scoring-container=680993827964.dkr.ecr.${AWS_REGION}.amazonaws.com/scoring-service:${IMAGE_TAG} \
+          scoring-container=680993827964.dkr.ecr.ap-south-1.amazonaws.com/scoring-service:${IMAGE_TAG} \
           --namespace default
 
-        # Wait for rollout
         kubectl rollout status deployment/scoring-deployment --namespace default
         """
     }
 }
+
 
     }
 }

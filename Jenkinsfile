@@ -31,6 +31,17 @@ pipeline {
         """
     }
 }
+        stage('Init AWS') {
+    steps {
+        script {
+            env.ACCOUNT_ID = sh(
+                script: "AWS_PAGER='' aws sts get-caller-identity --query Account --output text",
+                returnStdout: true
+            ).trim()
+            echo "Using AWS Account: ${env.ACCOUNT_ID}"
+        }
+    }
+}
 
 
 

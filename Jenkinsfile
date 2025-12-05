@@ -67,12 +67,30 @@ pipeline {
 }
 
         stage('Deploy to K8s') {
-            steps {
-                sh """
-                kubectl set image deployment/scoring-deployment scoring-container=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com/${REPO_NAME}:${IMAGE_TAG} --namespace default
-                kubectl rollout status deployment/scoring-deployment --namespace default
-                """
-            }
-        }
+    steps {
+        sh """
+        set -e
+        export AWS_PAGER=""
+
+        # Configure kubeconfig for EKS
+        aws eks update-kubeconfig --region ${AWS_REGION} --name scoring-eks
+
+        echo "Current kube context:"
+        kubectl config current-context
+
+        echo "Cluster nodes:"
+        kubectl get nodes
+
+        # Update deployment image
+        kubectl set image deployment/scoring-deployment \
+          scoring-container=680993827964.dkr.ecr.${AWS_REGION}.amazonaws.com/scoring-service:${IMAGE_TAG} \
+          --namespace default
+
+        # Wait for rollout
+        kubectl rollout status deployment/scoring-deployment --namespace default
+        """
+    }
+}
+
     }
 }
